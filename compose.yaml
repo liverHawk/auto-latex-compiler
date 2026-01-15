@@ -1,0 +1,8 @@
+services:
+  latex:
+    image: creambrulee/tiny-latex:latest
+    volumes:
+      - .:/workspace
+      - ./watch.sh:/workspace/watch.sh
+    working_dir: /workspace
+    command: /bin/sh -c "/workspace/watch.sh"
