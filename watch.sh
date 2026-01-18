@@ -63,15 +63,36 @@ done
 echo ""
 echo "👀 ファイル監視中... (Ctrl+C で終了)"
 echo ""
-# すべての .tex ファイルを監視
-inotifywait -m -e close_write "$SOURCE" --format '%w%f' | while read file; do
-    if [ "${file##*.}" = "tex" ]; then
+
+# デバウンス用の変数
+BUILD_PID=""
+DEBOUNCE_DELAY=1.5  # 秒
+
+# ビルドを実行する関数（デバウンス付き）
+debounced_build() {
+    # 既存のビルド待機プロセスがあればキャンセル
+    if [ -n "$BUILD_PID" ] && kill -0 "$BUILD_PID" 2>/dev/null; then
+        kill "$BUILD_PID" 2>/dev/null
+    fi
+    
+    # 新しいビルド待機プロセスを開始
+    (
+        sleep "$DEBOUNCE_DELAY"
         echo ""
-        echo "📝 変更検知: $(basename "$file")"
+        echo "📝 変更検知: 複数ファイル（最後の保存から ${DEBOUNCE_DELAY}秒経過）"
         
         # すべてのメインファイルを再ビルド
         for main_file in $(find_main_files); do
             convert_file "$main_file"
         done
+    ) &
+    BUILD_PID=$!
+}
+
+# すべての .tex ファイルを監視
+inotifywait -m -r -e close_write "$SOURCE" --format '%w%f' | while read file; do
+    if [ "${file##*.}" = "tex" ]; then
+        echo "📝 変更検知: $(basename "$file") (待機中...)"
+        debounced_build
     fi
 done
