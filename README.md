@@ -2,7 +2,7 @@
 
 ## Prepare
 
-- Setup LXD, LXC CLI
+- Setup LXD, LXC CLI (Only Docker, Orbstack is OK)
 - Target Directory (example: /home/test-latex)
 
 ## Process
@@ -12,3 +12,7 @@
 3. change execute mode on `watch.sh` (ex: `chmod +x watch.sh`)
 4. add tex files into `source` directory.
 5. run this command inside lxc container
+
+If you have only Docker, please run `docker compose up -d`.
+
+If there isn't some packages, create `Dockerfile`, and write code.
