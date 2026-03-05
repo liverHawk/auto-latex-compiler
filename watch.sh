@@ -12,10 +12,23 @@ convert_file() {
     cd "$SOURCE"
     local error_output=$(mktemp)
 
-    # 既存の中間ファイルを削除（ソース側でビルドし、tex/bib/pdf は残す）
-    for ext in aux log bcf bbl blg fdb_latexmk fls run.xml out toc lof lot; do
-        rm -f "$SOURCE/${name}.${ext}"
-    done
+    # 既存の中間ファイルを削除（ソース側でビルドし，tex/bib/pdf は残す）
+    find . -type f \( \
+        -name "*.aux" \
+        -o -name "*.log" \
+        -o -name "*.out" \
+        -o -name "*.toc" \
+        -o -name "*.bbl" \
+        -o -name "*.bcf" \
+        -o -name "*.lot" \
+        -o -name "*.lof" \
+        -o -name "*.run.xml" \
+        -o -name "*.blg" \
+        -o -name "*.synctex.gz" \
+        -o -name "*.fdb_latexmk" \
+        -o -name "*.fls" \
+        -o -name "*-SAVE-ERROR" \
+    \) -delete
 
     if latexmk \
         -lualatex \
@@ -27,6 +40,7 @@ convert_file() {
         if [ -f "$SOURCE/$name.pdf" ]; then
             timestamp=$(date '+%Y%m%d-%H%M%S')
             cp "$SOURCE/$name.pdf" "$OUTPUT/${name}_${timestamp}.pdf"
+            cp "$SOURCE/$name.pdf" "$OUTPUT/${name}.pdf"
         fi
 
         size=$(ls -lh "$OUTPUT"/${name}_*.pdf 2>/dev/null | awk 'END {print $5}')
@@ -66,7 +80,7 @@ echo ""
 
 # デバウンス用の変数
 BUILD_PID=""
-DEBOUNCE_DELAY=1.5  # 秒
+DEBOUNCE_DELAY=10  # 秒
 
 # ビルドを実行する関数（デバウンス付き）
 debounced_build() {
